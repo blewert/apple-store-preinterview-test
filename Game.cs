@@ -5,12 +5,13 @@ using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 namespace AppleGameInfo
 {
     internal class AppleGameAPI
     {
-        private const string APPLE_LOOKUP_PROTOCOL = "https";
+        private const string APPLE_LOOKUP_PROTOCOL = "http";
         private const string APPLE_LOOKUP_BASE_URL = "itunes.apple.com/lookup";
         private const string APPLE_LOOKUP_PARAM    = "id";
         
@@ -18,9 +19,64 @@ namespace AppleGameInfo
     }
 
     [Serializable]
-    public class AppleGameObject
+    public struct AppleAPIResult
     {
+        public string[] appletvScreenshotUrls;
+        public string[] screenshotUrls;
+        public string[] ipadScreenshotUrls;
+        public string artworkUrl60;
+        public string artworkUrl512;
+        public string artworkUrl100;
+        public string[] features;
+        public string[] supportedDevices;
+        public string[] advisories;
+        public bool isGameCenterEnabled;
+        public string kind;
+        public string minimumOsVersion;
+        public string trackCensoredName;
+        public string[] languageCodesISO2A;
+        public string fileSizeBytes;
+        public string sellerUrl;
+        public string formattedPrice;
+        public string contentAdvisoryRating;
+        public string averageUserRatingForCurrentVersion;
+        public string userRatingCountForCurrentVersion;
+        public string averageUserRating;
+        public string trackViewUrl;
+        public string trackContentRating;
+        public string currency;
+        public string bundleId;
+        public int trackId;
+        public string trackName;
+        public string releaseDate;
+        public string sellerName;
+        public string primaryGenreName;
+        public string[] genreIds;
+        public string isVppDeviceBasedLicensingEnabled;
+        public string currentVersionReleaseDate;
+        public string releaseNotes;
+        public string primaryGenreId;
+        public string description;
+        public int artistId;
+        public string artistName;
+        public string[] genres;
+        public float price;
+        public string version;
+        public string wrapperType;
+        public int userRatingCount;
+    }
 
+    [Serializable]
+    public class AppleAPIResponse
+    {
+        public int resultCount = 0;
+
+        public AppleAPIResult[] results;
+
+        public static AppleAPIResponse FromJson(in string jsonText)
+        {
+            return JsonConvert.DeserializeObject<AppleAPIResponse>(jsonText);
+        }
     }
 
     internal class HttpParseException : Exception
@@ -32,10 +88,10 @@ namespace AppleGameInfo
 
     internal static class HTTPUtils
     {
-        internal static async Task<HttpResponseMessage> Get(string url)
+        internal static Task<HttpResponseMessage> Get(string url)
         {
             //Just return a new get request using httpclient
-            return await new HttpClient().GetAsync(url);
+            return new HttpClient().GetAsync(url);
         }
 
         internal static string GetResponseContent(in HttpResponseMessage response)
@@ -70,7 +126,7 @@ namespace AppleGameInfo
             //Otherwise, at this point, we've filtered out the main  categories of 
             //response. Lets check if its a generic error:
             if (response.StatusCode != HttpStatusCode.OK)
-                return (false, $"An error occurred during the request: ${response.ReasonPhrase}");
+                return (false, $"Got HTTP the status '{response.ReasonPhrase}'");
 
             //..
 
@@ -105,7 +161,7 @@ namespace AppleGameInfo
             this.lookupID = lookupID;
         }
 
-        public AppleGameObject Lookup()
+        public AppleAPIResponse Lookup()
         {
             //Ok, first, check if the lookup id is valid. It's a string, anything could be in there.
             //But why are we using strings, why not a uint or int? Well two reasons:
@@ -132,12 +188,8 @@ namespace AppleGameInfo
             //Otherwise, we're all good.
             var content = HTTPUtils.GetResponseContent(in response);
 
-            Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine(content);
-            Console.ResetColor();
-
             //Return
-            return new AppleGameObject();
+            return AppleAPIResponse.FromJson(in content);
         }
     }
 }
