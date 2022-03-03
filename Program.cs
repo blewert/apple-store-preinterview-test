@@ -24,10 +24,15 @@ namespace AppleGameInfo
             //Lookup games
             TestLookupGames();
 
-            Console.WriteLine("[info] Done!");
+            Log(ConsoleColor.White, "[info] Done!");
             Console.ReadLine();
-            
-            
+        }
+
+        private static void Log(ConsoleColor color, string input)
+        {
+            Console.ForegroundColor = color;
+            Console.WriteLine(input);
+            Console.ResetColor();
         }
 
         private static void TestLookupGames()
@@ -37,52 +42,44 @@ namespace AppleGameInfo
             {
                 try
                 {
-                    Console.WriteLine($"[info] Looking up game '{gameID}'");
+                    Log(ConsoleColor.White, $"[info] Looking up game '{gameID}'");
 
                     //Make a game
-                    var game = new Game(gameID);
+                    var game = new GameLookup(gameID);
 
                     //Look it up
                     var gameResponses = game.Lookup();
 
                     if (gameResponses.resultCount <= 0)
                     {
-                        Console.ForegroundColor = ConsoleColor.Green;
-                        Console.WriteLine("[info] Found no results.");
-                        Console.ResetColor();
+                        Log(ConsoleColor.Green, "[info] Found no results.");
 
                         //Skip!
                         continue;
                     }
 
                     //Show results
-                    Console.ForegroundColor = ConsoleColor.Green;
-                    Console.WriteLine($"[info] Found {gameResponses.resultCount} result(s). Here are the bundle IDs:");
-                    Console.WriteLine("[info] >> " + gameResponses.results.Select(x => x.bundleId).Aggregate((a, b) => $"{a}, {b}"));
-                    Console.ResetColor();
+                    Log(ConsoleColor.Green, $"[info] Found {gameResponses.resultCount} result(s). Here are the bundle IDs:");
+                    Log(ConsoleColor.Green, "[info] >> " + gameResponses.results.Select(x => x.bundleId).Aggregate((a, b) => $"{a}, {b}"));
                 }
                 catch(AggregateException e)
                 {
                     //Wuh-oh something has gone REALLY wrong
                     //..
 
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine("[error] One or more errors occurred, see below:");
+                    Log(ConsoleColor.Red, "[error] One or more errors occurred, see below:");
 
                     foreach (var inner in e.InnerExceptions)
-                        Console.WriteLine($"[error]\t-- {inner.Message}");
+                        Log(ConsoleColor.Red, $"[error]\t-- {inner.Message}");
 
-                    Console.WriteLine("[error] Program exiting.");
-                    Console.ResetColor();
+                    Log(ConsoleColor.Red, "[error] Program exiting.");
 
                     break;
                 }
                 catch (Exception e)
                 { 
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine($"[error] An error occurred. See the details below.");
-                    Console.WriteLine($"[error] {e.Message}");
-                    Console.ResetColor();
+                    Log(ConsoleColor.Red, $"[error] An error occurred. See the details below.");
+                    Log(ConsoleColor.Red, $"[error] {e.Message}");
 
                     //Is it just an error with parsing? If so.. just move to the next game
                     if (e is HttpParseException || e is FormatException)
