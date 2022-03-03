@@ -7,6 +7,9 @@ using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 
+/// <summary>
+/// Represents a game result from the Apple API.
+/// </summary>
 [Serializable]
 public struct AppleGameResult
 {
@@ -56,15 +59,26 @@ public struct AppleGameResult
 }
 
 
+/// <summary>
+/// Represents an API response from Apple's API.
+/// </summary>
 [Serializable]
 public class AppleAPIResponse
 {
+    /// <summary>
+    /// The number of results found.
+    /// </summary>
     public int resultCount = 0;
 
+    /// <summary>
+    /// The results found.
+    /// </summary>
     public AppleGameResult[] results;
 
-    public static AppleAPIResponse FromJson(in string jsonText)
-    {
-        return JsonConvert.DeserializeObject<AppleAPIResponse>(jsonText);
-    }
+    /// <summary>
+    /// Factory method to construct an AppleAPIResponse from JSON text
+    /// </summary>
+    /// <param name="jsonText">The JSON, in raw textual format</param>
+    /// <returns>A parsed AppleAPIResponse object</returns>
+    public static AppleAPIResponse FromJson(in string jsonText) => JsonConvert.DeserializeObject<AppleAPIResponse>(jsonText);
 }

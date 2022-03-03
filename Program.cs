@@ -13,12 +13,16 @@ namespace AppleGameInfo
         /// </summary>
         private static string[] gameIDs;
 
+        /// <summary>
+        /// Main entry point of the program
+        /// </summary>
+        /// <param name="args"></param>
         static void Main(string[] args)
         {
             //The game ids to look up.
             gameIDs = new string[]
             {
-                "1353551752", "1436151665", "4", "-5", null, "5.1", "e", "definitely not a number", "1043639756"
+                "1353551752", "1436151665", "1043639756"
             };
 
             //Lookup games
@@ -28,6 +32,11 @@ namespace AppleGameInfo
             Console.ReadLine();
         }
 
+        /// <summary>
+        /// Logs a message with a colour, then resets the colour.
+        /// </summary>
+        /// <param name="color">The color</param>
+        /// <param name="input">The message</param>
         private static void Log(ConsoleColor color, string input)
         {
             Console.ForegroundColor = color;
@@ -35,6 +44,9 @@ namespace AppleGameInfo
             Console.ResetColor();
         }
 
+        /// <summary>
+        /// Looks up games by ID, in Program.gameIDs
+        /// </summary>
         private static void TestLookupGames()
         {
             //For each one, look it up
@@ -52,9 +64,8 @@ namespace AppleGameInfo
 
                     if (gameResponses.resultCount <= 0)
                     {
+                        //Skip, there were 0 results!
                         Log(ConsoleColor.Green, "[info] Found no results.");
-
-                        //Skip!
                         continue;
                     }
 

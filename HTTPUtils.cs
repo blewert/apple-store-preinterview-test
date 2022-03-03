@@ -9,6 +9,9 @@ using Newtonsoft.Json;
 
 namespace AppleGameInfo
 {
+    /// <summary>
+    /// A custom exception to be thrown during the parsing of the HTTP response
+    /// </summary>
     internal class HttpParseException : Exception
     {
         public HttpParseException() { }
@@ -16,14 +19,28 @@ namespace AppleGameInfo
         public HttpParseException(string message, Exception inner) : base(message, inner) { }
     }
 
+
+    /// <summary>
+    /// Contains a variety of methods for HTTP functionalities
+    /// </summary>
     internal static class HTTPUtils
     {
+        /// <summary>
+        /// Performs a GET request to a specified URL, and returns the async handler
+        /// </summary>
+        /// <param name="url">The URL</param>
+        /// <returns>The async handler</returns>
         internal static Task<HttpResponseMessage> Get(string url)
         {
             //Just return a new get request using httpclient
             return new HttpClient().GetAsync(url);
         }
 
+        /// <summary>
+        /// Gets the text from a given response, if possible.
+        /// </summary>
+        /// <param name="response">The response.</param>
+        /// <returns>The text (probably json) from the response</returns>
         internal static string GetResponseContent(in HttpResponseMessage response)
         {
             //Content length is 0? Something is wrong
@@ -34,6 +51,11 @@ namespace AppleGameInfo
             return response.Content.ReadAsStringAsync().Result;
         }
 
+        /// <summary>
+        /// Checks if a HttpResponseMessage is valid.
+        /// </summary>
+        /// <param name="response">The response from the request</param>
+        /// <returns>True if valid, with a reason, false otherwise.</returns>
         internal static (bool valid, string reason) IsResponseValid(in HttpResponseMessage response)
         {
             //Not found? Ok, tell them:
