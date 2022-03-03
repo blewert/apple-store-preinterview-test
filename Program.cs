@@ -24,6 +24,7 @@ namespace AppleGameInfo
             //Lookup games
             TestLookupGames();
 
+            Console.WriteLine("[info] Done!");
             Console.ReadLine();
         }
 

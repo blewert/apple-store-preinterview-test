@@ -38,23 +38,14 @@ namespace AppleGameInfo
             return await new HttpClient().GetAsync(url);
         }
 
-        internal static string GetResponseContent(in HttpWebResponse response)
+        internal static string GetResponseContent(in HttpResponseMessage response)
         {
-            using(var stream = response.GetResponseStream())
-            {
-                //Can't read for some reason.. hmm, that's odd. We should get out of 
-                //here before anything else happens
-                if (!stream.CanRead)
-                    throw new HttpParseException("Couldn't read from response stream. Is it null?");
+            //Content length is 0? Something is wrong
+            if (response.Content.Headers.ContentLength == 0)
+                throw new HttpParseException("Content length received was zero, therefore, empty.");
 
-                //Stream length is 0? We have nothing!
-                if (stream.Length == 0)
-                    throw new HttpParseException("Detected empty response from API.");
-
-                //response.content
-            }
-
-            return "";
+            //Otherwise, get contents
+            return response.Content.ReadAsStringAsync().Result;
         }
 
         internal static (bool valid, string reason) IsResponseValid(in HttpResponseMessage response)
@@ -139,6 +130,13 @@ namespace AppleGameInfo
                 throw new HttpParseException(responseValidityCheck.reason);
 
             //Otherwise, we're all good.
+            var content = HTTPUtils.GetResponseContent(in response);
+
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine(content);
+            Console.ResetColor();
+
+            //Return
             return new AppleGameObject();
         }
     }
