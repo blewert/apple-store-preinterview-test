@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -31,16 +32,32 @@ namespace AppleGameInfo
 
     internal static class HTTPUtils
     {
-        internal static async Task<HttpWebResponse> Get(string url)
+        internal static async Task<HttpResponseMessage> Get(string url)
         {
-            //Make a web request
-            HttpWebRequest req = WebRequest.CreateHttp(url);
-
-            //Return response
-            return (HttpWebResponse)(await req.GetResponseAsync());
+            //Just return a new get request using httpclient
+            return await new HttpClient().GetAsync(url);
         }
 
-        internal static (bool valid, string reason) IsResponseValid(in HttpWebResponse response)
+        internal static string GetResponseContent(in HttpWebResponse response)
+        {
+            using(var stream = response.GetResponseStream())
+            {
+                //Can't read for some reason.. hmm, that's odd. We should get out of 
+                //here before anything else happens
+                if (!stream.CanRead)
+                    throw new HttpParseException("Couldn't read from response stream. Is it null?");
+
+                //Stream length is 0? We have nothing!
+                if (stream.Length == 0)
+                    throw new HttpParseException("Detected empty response from API.");
+
+                //response.content
+            }
+
+            return "";
+        }
+
+        internal static (bool valid, string reason) IsResponseValid(in HttpResponseMessage response)
         {
             //Not found? Ok, tell them:
             if (response.StatusCode == HttpStatusCode.NotFound)
@@ -54,20 +71,27 @@ namespace AppleGameInfo
             if (response.StatusCode == HttpStatusCode.InternalServerError)
                 return (false, "An internal server error occurred. Maybe try run the program again.");
 
+            //Timeout?
+            if(response.StatusCode == HttpStatusCode.RequestTimeout)
+                return (false, "Request timed out. Is the API up?");
 
-            //Otherwise, at this point, we've filtered out the main 3 categories of 
+
+            //Otherwise, at this point, we've filtered out the main  categories of 
             //response. Lets check if its a generic error:
             if (response.StatusCode != HttpStatusCode.OK)
-                return (false, $"An error occurred during the request: ${response.StatusDescription}");
+                return (false, $"An error occurred during the request: ${response.ReasonPhrase}");
 
             //..
 
             //At this point, the status code has to be 200 OK. Lets check some other things.
             //.
 
+            //Get content type
+            var contentType = response.Content.Headers.ContentType.MediaType;
+
             //Is the content type not text/json or application/json? Or weirdly, text/javascript? If so.. die
-            if (!(response.ContentType.EndsWith("/json") || response.ContentType.StartsWith("text/javascript")))
-                return (false, $"Unexpected content type '{response.ContentType}', I expected some kind of json.");
+            if (!(contentType.EndsWith("/json") || contentType.StartsWith("text/javascript")))
+                return (false, $"Unexpected content type '{contentType}', I expected some kind of json.");
 
             //Everything at this point is all good, by our standards
             return (true, default);
@@ -105,7 +129,7 @@ namespace AppleGameInfo
             string lookupURL = AppleGameAPI.GetLookupURL(this.lookupID);
 
             //Send GET request
-            HttpWebResponse response = HTTPUtils.Get(lookupURL).Result;
+            HttpResponseMessage response = HTTPUtils.Get(lookupURL).Result;
 
             //Get validity of response
             var responseValidityCheck = HTTPUtils.IsResponseValid(in response);
